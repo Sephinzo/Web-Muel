@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GamerPay - Instant Game Top Up</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom Animations */
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        /* Card Hover Effects */
+        .game-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
+        
+        /* Selection Borders */
+        .selected-item { border-color: #f97316 !important; background-color: #fff7ed !important; position: relative; }
+        .selected-item::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #f97316;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .step-circle {
+            width: 32px;
+            height: 32px;
+            background: #f97316;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex items-center cursor-pointer" onclick="goHome()">
+                    <i class="fa-solid fa-gamepad text-orange-500 text-3xl mr-2"></i>
+                    <span class="font-bold text-2xl tracking-tighter">Gamer<span class="text-orange-500">Pay</span></span>
+                </div>
+                
+                <!-- Search (Desktop) -->
+                <div class="hidden md:flex flex-1 mx-10 relative">
+                    <input type="text" id="searchInput" placeholder="Search games..." class="w-full bg-indigo-800 text-white rounded-full py-2 px-5 focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder-indigo-300">
+                    <button class="absolute right-3 top-2 text-indigo-300 hover:text-white">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </div>
+
+                <!-- Right Menu -->
+                <div class="flex items-center space-x-4">
+                    <button class="hover:text-orange-500 transition"><i class="fa-solid fa-earth-americas text-xl"></i></button>
+                    <button class="bg-orange-500 hover:bg-orange-600 px-4 py-1.5 rounded-full font-semibold text-sm transition">Sign In</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow">
+        
+        <!-- HOME PAGE -->
+        <div id="homePage" class="fade-in">
+            <!-- Hero Carousel -->
+            <div class="relative bg-gray-900 h-64 md:h-80 overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent z-10"></div>
+                <!-- Mock Banner -->
+                <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Banner" class="w-full h-full object-cover opacity-60">
+                <div class="absolute bottom-10 left-0 right-0 z-20 text-center px-4">
+                    <h1 class="text-3xl md:text-5xl font-bold text-white mb-2">Top Up instantly.</h1>
+                    <p class="text-gray-300 text-lg">The fastest and most trusted way to buy game credits.</p>
+                </div>
+            </div>
+
+            <!-- Games Grid -->
+            <div class="max-w-6xl mx-auto px-4 py-8">
+                <h2 class="text-2xl font-bold mb-6 border-l-4 border-orange-500 pl-3">Popular Games</h2>
+                <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4" id="gamesGrid">
+                    <!-- Game cards will be injected here via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUCT PAGE (Hidden by default) -->
+        <div id="productPage" class="hidden fade-in pb-20">
+            <!-- Game Header -->
+            <div class="bg-white shadow-sm border-b">
+                <div class="max-w-4xl mx-auto px-4 py-6 flex items-center space-x-4">
+                    <img id="ppGameImage" src="" alt="Game Icon" class="w-20 h-20 rounded-xl shadow-md object-cover">
+                    <div>
+                        <h1 id="ppGameName" class="text-2xl font-bold text-gray-900">Game Name</h1>
+                        <p class="text-green-600 text-sm flex items-center"><i class="fa-solid fa-check-circle mr-1"></i> Official Distributor</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="max-w-4xl mx-auto px-4 py-8 space-y-6">
+                
+                <!-- Section 1: User ID -->
+                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 bg-orange-500 text-white px-3 py-1 rounded-br-lg text-sm font-bold">1</div>
+                    <h3 class="text-lg font-bold mb-4 ml-6">Enter User ID</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" id="userIdInput" placeholder="User ID" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:outline-none transition">
+                        <input type="text" id="serverIdInput" placeholder="Server ID (Zone ID)" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:outline-none transition">
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2"><i class="fa-solid fa-circle-info mr-1"></i> To find your ID, tap on your character profile icon in the game.</p>
+                </div>
+
+                <!-- Section 2: Recharge Amount -->
+                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 relative">
+                    <div class="absolute top-0 left-0 bg-orange-500 text-white px-3 py-1 rounded-br-lg text-sm font-bold">2</div>
+                    <h3 class="text-lg font-bold mb-4 ml-6">Select Recharge Amount</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" id="denominationsGrid">
+                        <!-- Denominations injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Section 3: Payment Method -->
+                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 relative">
+                    <div class="absolute top-0 left-0 bg-orange-500 text-white px-3 py-1 rounded-br-lg text-sm font-bold">3</div>
+                    <h3 class="text-lg font-bold mb-4 ml-6">Select Payment</h3>
+                    
+                    <div class="space-y-3" id="paymentMethodsList">
+                        <!-- Payments injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Section 4: Buy -->
+                <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200 relative">
+                    <div class="absolute top-0 left-0 bg-orange-500 text-white px-3 py-1 rounded-br-lg text-sm font-bold">4</div>
+                    <h3 class="text-lg font-bold mb-4 ml-6">Buy!</h3>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email Address (Optional)</label>
+                        <input type="email" id="emailInput" placeholder="Enter email for receipt" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:outline-none">
+                    </div>
+                    <div class="bg-orange-50 rounded-lg p-4 border border-orange-100 flex justify-between items-center hidden" id="totalDisplay">
+                        <span class="text-gray-600 font-medium">Total Payment</span>
+                        <span class="text-xl font-bold text-orange-600" id="finalPriceDisplay">$0.00</span>
+                    </div>
+                    <button onclick="openCheckout()" id="buyNowBtn" class="w-full mt-4 bg-orange-500 hover:bg-orange-600 text-white font-bold py-4 rounded-full shadow-lg transform transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        Buy Now
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400 py-10 mt-auto">
+        <div class="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+                <div class="flex items-center text-white mb-4">
+                    <i class="fa-solid fa-gamepad text-orange-500 text-2xl mr-2"></i>
+                    <span class="font-bold text-xl">GamerPay</span>
+                </div>
+                <p class="text-sm">The leading digital entertainment payment service provider in the world.</p>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-4">Marketing</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#" class="hover:text-white">Become a Partner</a></li>
+                    <li><a href="#" class="hover:text-white">Affiliate Program</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-4">Support</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#" class="hover:text-white">FAQ</a></li>
+                    <li><a href="#" class="hover:text-white">Contact Us</a></li>
+                    <li><a href="#" class="hover:text-white">Terms of Service</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-4">Follow Us</h4>
+                <div class="flex space-x-4 text-lg">
+                    <a href="#" class="hover:text-orange-500"><i class="fa-brands fa-facebook"></i></a>
+                    <a href="#" class="hover:text-orange-500"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" class="hover:text-orange-500"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="#" class="hover:text-orange-500"><i class="fa-brands fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="text-center text-xs mt-10 border-t border-gray-800 pt-6">
+            &copy; 2024 GamerPay International. All rights reserved. Mockup for Demo.
+        </div>
+    </footer>
+
+    <!-- Checkout Modal -->
+    <div id="checkoutModal" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-95 opacity-0" id="modalContent">
+            <div class="bg-indigo-900 text-white p-4 flex justify-between items-center">
+                <h3 class="font-bold text-lg">Order Confirmation</h3>
+                <button onclick="closeCheckout()" class="text-indigo-200 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6">
+                <div class="flex items-center mb-6">
+                    <img id="modalGameImg" src="" class="w-16 h-16 rounded-lg mr-4 object-cover shadow-sm">
+                    <div>
+                        <h4 id="modalGameName" class="font-bold text-gray-800 text-lg">Game Name</h4>
+                        <p id="modalItemName" class="text-orange-600 font-medium">Item Name</p>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 rounded-lg p-4 space-y-3 text-sm mb-6">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">User ID</span>
+                        <span id="modalUserId" class="font-mono font-bold text-gray-800">123456</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Payment Method</span>
+                        <span id="modalPaymentMethod" class="font-bold text-gray-800">VISA</span>
+                    </div>
+                    <div class="flex justify-between border-t border-gray-200 pt-2 mt-2">
+                        <span class="text-gray-500">Total</span>
+                        <span id="modalTotal" class="font-bold text-xl text-indigo-900">$10.00</span>
+                    </div>
+                </div>
+
+                <button onclick="processPayment()" id="confirmBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg shadow-md transition flex justify-center items-center">
+                    <span>Confirm and Pay</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center animate-bounce-in">
+            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fa-solid fa-check text-4xl text-green-500"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Payment Successful!</h2>
+            <p class="text-gray-500 mb-6">Your top-up has been added to your account instantly.</p>
+            <button onclick="goHome()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg shadow-md transition">
+                Back to Merchant
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const games = [
+            { id: 1, name: "Mobile Legends", img: "https://play-lh.googleusercontent.com/EqE3QW_q_Y75XJ45_CjO6L8gZ_z0Z95886X7X9_6X053535353535353535353", color: "bg-blue-100", 
+              items: [
+                { id: 'ml1', amount: '5 Diamonds', price: 0.15 },
+                { id: 'ml2', amount: '12 Diamonds', price: 0.30 },
+                { id: 'ml3', amount: '50 Diamonds', price: 1.20 },
+                { id: 'ml4', amount: '150 Diamonds', price: 3.50 },
+                { id: 'ml5', amount: '500 Diamonds', price: 10.00 },
+                { id: 'ml6', amount: '1000 Diamonds', price: 19.50 },
+                { id: 'ml7', amount: 'Twilight Pass', price: 9.99 },
+                { id: 'ml8', amount: 'Weekly Pass', price: 1.99 },
+              ] 
+            },
+            { id: 2, name: "Free Fire", img: "https://play-lh.googleusercontent.com/yF9Z0_Z8Z95886X7X9_6X053535353535353535353", color: "bg-orange-100",
+              items: [
+                { id: 'ff1', amount: '100 Diamonds', price: 1.00 },
+                { id: 'ff2', amount: '310 Diamonds', price: 3.00 },
+                { id: 'ff3', amount: '520 Diamonds', price: 5.00 },
+                { id: 'ff4', amount: '1060 Diamonds', price: 10.00 },
+                { id: 'ff5', amount: '2180 Diamonds', price: 20.00 },
+              ]
+            },
+            { id: 3, name: "PUBG Mobile", img: "https://upload.wikimedia.org/wikipedia/en/4/44/PlayerUnknown%27s_Battlegrounds_Mobile_Logo.jpg", color: "bg-yellow-100",
+              items: [
+                { id: 'pb1', amount: '60 UC', price: 0.99 },
+                { id: 'pb2', amount: '325 UC', price: 4.99 },
+                { id: 'pb3', amount: '660 UC', price: 9.99 },
+                { id: 'pb4', amount: '1800 UC', price: 24.99 },
+              ]
+            },
+            { id: 4, name: "Genshin Impact", img: "https://play-lh.googleusercontent.com/849484949494949494949494949494949494949494", color: "bg-purple-100",
+              items: [
+                { id: 'gi1', amount: '60 Crystals', price: 0.99 },
+                { id: 'gi2', amount: '300 Crystals', price: 4.99 },
+                { id: 'gi3', amount: '980 Crystals', price: 14.99 },
+                { id: 'gi4', amount: 'Welkin Moon', price: 4.99 },
+              ]
+            },
+            { id: 5, name: "Valorant", img: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Valorant_logo_-_pink_color_version.svg/1200px-Valorant_logo_-_pink_color_version.svg.png", color: "bg-red-100",
+              items: [
+                { id: 'vl1', amount: '475 VP', price: 4.99 },
+                { id: 'vl2', amount: '1000 VP', price: 9.99 },
+                { id: 'vl3', amount: '2050 VP', price: 19.99 },
+              ]
+            },
+            { id: 6, name: "Call of Duty", img: "https://play-lh.googleusercontent.com/scale-game-image", color: "bg-gray-200",
+               items: [
+                { id: 'cod1', amount: '80 CP', price: 0.99 },
+                { id: 'cod2', amount: '420 CP', price: 4.99 },
+                { id: 'cod3', amount: '880 CP', price: 9.99 },
+              ]
+            },
+        ];
+
+        // Using placeholder images for demo purposes to avoid broken links
+        const getPlaceholderImg = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&size=200&bold=true&font-size=0.33`;
+
+        const paymentMethods = [
+            { id: 'gopay', name: 'GoPay', icon: 'fa-wallet', color: 'text-blue-500' },
+            { id: 'ovo', name: 'OVO', icon: 'fa-mobile-screen', color: 'text-purple-600' },
+            { id: 'dana', name: 'Dana', icon: 'fa-money-bill-wave', color: 'text-blue-400' },
+            { id: 'shopee', name: 'ShopeePay', icon: 'fa-bag-shopping', color: 'text-orange-500' },
+            { id: 'visa', name: 'Credit Card', icon: 'fa-credit-card', color: 'text-indigo-600' },
+            { id: 'bank', name: 'Bank Transfer', icon: 'fa-building-columns', color: 'text-gray-600' },
+        ];
+
+        // --- STATE ---
+        let selectedGame = null;
+        let selectedItem = null;
+        let selectedPayment = null;
+
+        // --- INIT ---
+        window.onload = () => {
+            renderGames();
+        };
+
+        // --- RENDER FUNCTIONS ---
+        function renderGames() {
+            const grid = document.getElementById('gamesGrid');
+            grid.innerHTML = '';
+            games.forEach(game => {
+                const imgUrl = game.id <= 6 ? getPlaceholderImg(game.name) : game.img; // Use placeholders for stability
+                const card = document.createElement('div');
+                card.className = 'game-card cursor-pointer group';
+                card.onclick = () => openProductPage(game);
+                card.innerHTML = `
+                    <div class="relative rounded-2xl overflow-hidden shadow-md aspect-square bg-gray-200">
+                        <img src="${imgUrl}" class="w-full h-full object-cover transition duration-300 group-hover:scale-110" alt="${game.name}">
+                        <div class="a
